@@ -1,0 +1,211 @@
+// File: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for Cloud Providers
+enum ProviderType {
+  aws
+  gcp
+  azure
+}
+
+// ========================
+// Authentication & User    p
+// ========================
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  password        String
+  name            String?
+  defaultProvider ProviderType?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  preferences        UserPreference?
+  providerConfigs    ProviderConfig[]
+  files              File[]
+  enrichedFolders    Folder[] // Folders user has explicitly interacted with (favorited, tagged)
+  sharedFiles        SharedFile[]
+  activityLogs       ActivityLog[]
+  costMetrics        CostMetric[]
+  storageSuggestions StorageSuggestion[]
+
+  @@index([email])
+}
+
+model UserPreference {
+  id                       String   @id @default(cuid())
+  theme                    String   @default("light")
+  itemsPerPage             Int      @default(20)
+  createdAt                DateTime @default(now())
+  locale                   String   @default("en-US")
+  dateFormat               String   @default("MM/DD/YYYY")
+  defaultUploadFolderPath  String?
+  notificationEmailEnabled Boolean  @default(false)
+  updatedAt                DateTime @updatedAt
+  userId                   String   @unique
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ========================
+// Cloud Provider Config
+// ========================
+
+model ProviderConfig {
+  id            String       @id @default(cuid())
+  userId        String
+  providerName  ProviderType
+  bucketName    String? // AWS/GCP
+  region        String? // AWS
+  accessKey     String? // AWS (encrypted)
+  secretKey     String? // AWS (encrypted)
+  accountName   String? // Azure
+  accountKey    String? // Azure (encrypted)
+  containerName String? // Azure
+  projectId     String? // GCP
+  keyFilename   String? // GCP (encrypted filepath or actual content)
+  createdAt     DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerName])
+  @@index([userId])
+}
+
+// ========================
+// Enriched Folder Data (Only for favorited/tagged folders)
+// ========================
+model Folder {
+  id         String       @id @default(cuid())
+  userId     String
+  provider   ProviderType
+  path       String // The exact cloud path prefix, e.g., "documents/project-alpha/" (always end with /)
+  name       String // The display name of the folder, e.g., "project-alpha"
+  isFavorite Boolean      @default(false)
+  tags       Json? // ["client-a", "urgent"]
+  createdAt  DateTime     @default(now()) // When the folder was first enriched in DB
+  updatedAt  DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Add index for tags if using DB's JSON search capabilities
+
+  @@unique([userId, provider, path]) // Only one enrichment record per unique cloud path per user
+  @@index([userId])
+  @@index([userId, isFavorite])
+  @@index([userId, provider, path]) // To quickly check for enrichment during Browse
+}
+
+// ========================
+// File Management (Database as Enrichment Layer)
+// ========================
+model File {
+  id                String       @id @default(cuid())
+  userId            String
+  provider          ProviderType
+  cloudPath         String // Full path/key, e.g., "documents/project-alpha/report.pdf"
+  fileName          String // e.g., "report.pdf"
+  folderPath        String // The parent path, e.g., "documents/project-alpha/" (derived from cloudPath)
+  size              BigInt
+  mimeType          String?
+  isFavorite        Boolean      @default(false)
+  // isEnriched     Boolean      @default(false) // Can maybe be derived if isFavorite=true OR tags!=null etc. Or keep for sync clarity. Let's keep it for now.
+  isEnriched        Boolean      @default(false)
+  tags              Json?
+  classification    Json?
+  lastCloudModified DateTime?
+  lastSyncedAt      DateTime     @default(now())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  SharedFile        SharedFile[]
+  StorageSuggestion StorageSuggestion[]
+
+  @@unique([userId, provider, cloudPath])
+  @@index([userId])
+  @@index([userId, provider, folderPath]) // Efficiently query files within a specific folder path
+  @@index([userId, provider, cloudPath])
+  @@index([userId, isFavorite])
+  @@index([userId, isEnriched])
+  @@index([fileName])
+}
+
+// ========================
+// File Sharing, Analytics, Optimization (Schemas remain the same as previous revision)
+// ========================
+model SharedFile {
+  id          String    @id @default(cuid())
+  fileId      String
+  ownerId     String
+  sharedUrl   String    @unique
+  expiresAt   DateTime?
+  accessCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  file        File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([fileId])
+  @@index([ownerId])
+  @@index([expiresAt])
+}
+
+model ActivityLog {
+  id         String        @id @default(cuid())
+  userId     String
+  actionType String
+  targetType String? // "File", "Folder", "ProviderConfig", etc.
+  targetId   String? // DB id if applicable
+  targetPath String? // Cloud path/prefix
+  provider   ProviderType?
+  timestamp  DateTime      @default(now())
+  details    Json?
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@index([actionType])
+  @@index([targetId])
+}
+
+model CostMetric {
+  id               String       @id @default(cuid())
+  userId           String
+  provider         ProviderType
+  estimatedCost    Float
+  storageUsedBytes BigInt
+  retrievalBytes   BigInt?
+  requestsCount    Int?
+  month            String // "YYYY-MM"
+  generatedAt      DateTime     @default(now())
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, month])
+  @@index([userId, provider])
+  @@index([month])
+}
+
+model StorageSuggestion {
+  id               String   @id @default(cuid())
+  userId           String
+  fileId           String
+  suggestedAction  String
+  suggestedClass   String?
+  estimatedSavings Float
+  reason           String?
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  file             File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([fileId])
+}
