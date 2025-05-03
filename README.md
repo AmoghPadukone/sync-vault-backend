@@ -19,3 +19,10 @@ project-root/
 ├── jest.config.js
 ├── package.json
 └── README.md
+
+example
+
+{
+"email": "amogh@amogh.com",
+"password": "securePassword123"
+}

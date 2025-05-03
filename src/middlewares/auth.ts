@@ -5,10 +5,11 @@ export const authenticateJWT = (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): void => {
     const authHeader = req.headers.authorization;
+
     if (!authHeader) {
-        return res.status(401).json({ message: 'Missing token: Not Authenticated' });
+        return next(new Error('Missing token: Not Authenticated'));
     }
 
     const token = authHeader.split(' ')[1];
@@ -19,7 +20,7 @@ export const authenticateJWT = (
             email: payload.email,
         };
         next();
-    } catch {
-        return res.status(403).json({ message: 'Invalid token' });
+    } catch (err) {
+        return next(new Error('Invalid token'));
     }
 };

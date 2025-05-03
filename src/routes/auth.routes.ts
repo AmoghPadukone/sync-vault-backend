@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import asyncHandler from 'express-async-handler';
 import { login, me, signup, updateProfile } from '../controllers/auth.controller';
+import { authenticateJWT } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { LoginSchema, ProfileUpdateSchema, SignupSchema } from '../types/dto/auth.dto';
 
@@ -86,7 +87,7 @@ router.post('/login', validate(LoginSchema), login);
  *       401:
  *         description: Unauthorized
  */
-router.get('/me', asyncHandler(me));
+router.get('/me', authenticateJWT, asyncHandler(me));
 
 /**
  * @swagger
@@ -110,6 +111,6 @@ router.get('/me', asyncHandler(me));
  *       401:
  *         description: Unauthorized
  */
-router.patch('/profile', validate(ProfileUpdateSchema), asyncHandler(updateProfile));
+router.patch('/profile', validate(ProfileUpdateSchema), authenticateJWT, asyncHandler(updateProfile));
 
 export default router;

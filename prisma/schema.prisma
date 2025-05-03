@@ -2,6 +2,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "./node_modules/@prisma/client"
 }
 
 datasource db {
@@ -23,10 +24,10 @@ model User {
   id              String        @id @default(cuid())
   email           String        @unique
   password        String
-  name            String?
+  name            String?       @default("Anonymous")
   defaultProvider ProviderType?
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  updatedAt       DateTime      @default(now()) @updatedAt
 
   preferences        UserPreference?
   providerConfigs    ProviderConfig[]

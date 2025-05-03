@@ -24,6 +24,7 @@ export const login = async (req: Request, res: Response) => {
 // GET /me
 export const me = async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log('User:', req.user);
         const { email } = req.user as { email: string }; // assuming you attach user in auth middleware
         if (!email) {
             throw new Error('Unauthorized');
@@ -39,6 +40,7 @@ export const me = async (req: Request, res: Response): Promise<void> => {
 // PATCH /profile
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
+
         const { email } = req.user as { email: string };
         if (!email) {
             throw new Error('Unauthorized');
