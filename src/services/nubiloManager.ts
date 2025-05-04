@@ -117,6 +117,20 @@ class NubiloManager {
   public static clearAll() {
     this.cache.clear();
   }
+
+  public static async getProviderType(userId: string): Promise<'aws' | 'azure' | 'gcp'> {
+    const cached = this.cache.get(userId);
+    if (cached) return cached.provider;
+
+    const config = await prisma.providerConfig.findFirst({
+      where: { userId },
+    });
+
+    if (!config) throw new Error(`No cloud config found for user: ${userId}`);
+
+    return config.providerName as 'aws' | 'azure' | 'gcp';
+  }
+
 }
 
 export default NubiloManager;

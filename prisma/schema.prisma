@@ -117,7 +117,7 @@ model File {
   mimeType          String?
   isFavorite        Boolean      @default(false)
   // isEnriched     Boolean      @default(false) // Can maybe be derived if isFavorite=true OR tags!=null etc. Or keep for sync clarity. Let's keep it for now.
-  isEnriched        Boolean      @default(false)
+  // isEnriched        Boolean      @default(false)
   tags              Json?
   classification    Json?
   lastCloudModified DateTime?
@@ -135,7 +135,7 @@ model File {
   @@index([userId, provider, folderPath]) // Efficiently query files within a specific folder path
   @@index([userId, provider, cloudPath])
   @@index([userId, isFavorite])
-  @@index([userId, isEnriched])
+  // @@index([userId, isEnriched])
   @@index([fileName])
 }
 

@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import path from 'path';
 import { logger } from './config/logger';
 import { errorHandler } from './middlewares/errorHandler';
+import { handleErrors } from './middlewares/handleErrors';
 import { setupSwagger } from './plugins/swagger';
 import { registerRoutes } from './routes';
 // import authRoutes from './routes/auth.routes';
@@ -40,6 +41,7 @@ app.get('/health', async (req, res) => {
         res.status(500).json({ status: 'error' });
     }
 });
+// app.use(handleErrors);
 
 
 app.use(errorHandler);
