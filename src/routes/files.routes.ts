@@ -8,17 +8,7 @@ import { deleteFile, filesController, getFileMetadata, uploadFile } from '../con
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
 
-/**
- * @swagger
- * /api/files/upload:
- *   get:
- *     summary: Upload a file
- *     tags: [Files]
- *     responses:
- *       200:
- *         description: Successful response
- */
-router.get('/example', asyncHandler(filesController.example));
+
 /**
  * @swagger
  * /api/files/upload:

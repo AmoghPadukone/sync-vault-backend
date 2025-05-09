@@ -1,8 +1,5 @@
-// File: prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
-  output   = "./node_modules/@prisma/client"
 }
 
 datasource db {
@@ -18,7 +15,7 @@ enum ProviderType {
 }
 
 // ========================
-// Authentication & User    p
+// Authentication & User     
 // ========================
 model User {
   id              String        @id @default(cuid())
@@ -143,20 +140,23 @@ model File {
 // File Sharing, Analytics, Optimization (Schemas remain the same as previous revision)
 // ========================
 model SharedFile {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   fileId      String
   ownerId     String
   sharedUrl   String    @unique
-  expiresAt   DateTime?
+  sharedOn    DateTime  @default(now())
+  expiresOn   DateTime? // ✅ Must be here
+  isActive    Boolean   @default(true) // ✅ Optional, but useful
   accessCount Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  file        File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([fileId])
   @@index([ownerId])
-  @@index([expiresAt])
+  @@index([expiresOn])
 }
 
 model ActivityLog {

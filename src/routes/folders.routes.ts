@@ -16,7 +16,7 @@ const router = Router();
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/CreateFoldersDto'
- *     responses:
+*     responses:
  *       200:
  *         description: Folder successfully created
  *         content:
