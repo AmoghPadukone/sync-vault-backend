@@ -1,134 +1,136 @@
  
- # Nubilo SDK 🚀
+# 🧠 SyncVault Backend Server
 
-**Nubilo SDK** is a blazing-fast, modular SDK built to simplify multi-cloud interactions across major providers like **AWS, Google Cloud, Azure**, and more — all through a unified, developer-friendly interface.
-
-## ✨ Why Nubilo?
-
-Managing cloud interactions should be simple, consistent, and vendor-agnostic. Nubilo brings clarity and power to cloud operations with:
-- ⚙️ **Unified API** to abstract away provider-specific complexities.
-- 🧩 **Modular architecture** so you only import what you need.
-- 🔐 **Built-in security and logging** to track actions and protect sensitive operations.
-- 📦 **Pluggable design** to easily add support for new providers or services.
+This is the **backend powerhouse** for the SyncVault platform — a privacy-first, multi-cloud orchestration service. Built for speed, clarity, and control, the backend provides secure REST APIs, user authentication, file operations, and metadata handling across various storage providers.
 
 ---
 
-## 📐 Architecture Overview
+## 🧱 Tech Stack
 
-The Nubilo SDK is built around a **core-provider-plugin** model:
+| Layer        | Tech Used                          |
+|--------------|------------------------------------|
+| Framework    | Express (TypeScript)               |
+| ORM          | Prisma                             |
+| Auth         | JWT + Bcrypt                       |
+| Validation   | Zod                                |
+| API Docs     | Swagger (via swagger-jsdoc)        |
+| Dev Tools    | ts-node-dev, ESLint, Prettier, Jest|
+
+---
+
+## ⚙️ Features
+
+- 🔐 **JWT Authentication** (with Bcrypt password hashing)
+- 🗂️ **File Uploads & Metadata Parsing** using `multer`
+- 🧼 **Zod-based request validation** for safety and clarity
+- 📆 **Day.js** utilities for date manipulation
+- 📦 **Modular architecture** with strong TypeScript support
+- 📊 **Swagger**-powered API docs for easy integration
+- 🧪 **Jest + Supertest** test setup out of the box
+- 🔁 **LRU caching** support (e.g., for session optimization or storage metadata)
+
+---
+
+## 📁 Folder Structure
 
 ```plaintext
-+------------------------+
-|      Nubilo Core       |
-|  (Common Interfaces,   |
-|   Utils, Errors, etc)  |
-+----------+-------------+
-           |
-     +-----+------+
-     |            |
-+----v----+   +---v-----+   ... more
-| AWS SDK |   | GCP SDK |   providers
-+---------+   +---------+
+src/
+├── index.ts            # Entry point
+├── routes/             # Express routers
+├── controllers/        # Request handlers
+├── services/           # Business logic
+├── middlewares/        # Auth, error handling, validation
+├── utils/              # Helpers and utilities
+├── config/             # Env config, constants
+└── prisma/             # DB schema and client
 ````
-
-### 🔧 Key Modules:
-
-| Module           | Description                                                            |
-| ---------------- | ---------------------------------------------------------------------- |
-| `@nubilo/core`   | Contains base interfaces, error handlers, utilities, and shared types. |
-| `@nubilo/aws`    | AWS-specific implementation for storage, compute, etc.                 |
-| `@nubilo/gcp`    | GCP-specific SDK plug with full API coverage.                          |
-| `@nubilo/azure`  | Azure plugin module (in progress).                                     |
-| `@nubilo/logger` | Built-in logger for all operations.                                    |
-| `@nubilo/types`  | Shared type contracts for consistency across clouds.                   |
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Install the Core and a Provider Plugin
+### 1. Clone & Install
 
 ```bash
-npm install @nubilo/core @nubilo/aws
+git clone https://github.com/your-org/syncvault-backend.git
+cd syncvault-backend
+npm install
 ```
 
-### 2. Example Usage
+### 2. Configure Environment
 
-```ts
-import { NubiloAWS } from '@nubilo/aws';
+Create a `.env` file in the root:
 
-const aws = new NubiloAWS({
-  accessKeyId: process.env.AWS_KEY,
-  secretAccessKey: process.env.AWS_SECRET,
-});
-
-const buckets = await aws.storage.listBuckets();
-console.log(buckets);
+```env
+PORT=5000
+JWT_SECRET=your_jwt_secret
+DATABASE_URL=postgresql://user:password@host:port/dbname
 ```
 
----
-
-## ⚡ Features
-
-* 📦 Plug-and-play support for AWS, GCP, and Azure
-* 🛠 Standardized API across cloud platforms
-* 🔒 Secure credentials and request signing
-* 🧪 Fully typed (TypeScript) with strong IDE support
-* 📊 Logging and metrics ready
-
----
-
-## 🔌 Plugin System
-
-Want to add your own provider or service? Just implement the required interfaces from `@nubilo/core` and register it.
-
-```ts
-class MyCustomProvider implements StorageAdapter {
-  async listBuckets() { ... }
-  async uploadFile() { ... }
-}
-```
-
----
-
-## 🧪 Testing & Dev
+### 3. Run in Dev Mode
 
 ```bash
-# Run unit tests
+npm run dev
+```
+
+---
+
+## 🧪 Running Tests
+
+```bash
 npm run test
-
-# Build SDK
-npm run build
 ```
 
----
+Includes:
 
-## 📚 Documentation
-
-> Full docs available soon at [https://nubilo.dev](https://nubilo.dev)
-
----
-
-## 📍 Roadmap
-
-* [x] AWS support
-* [x] GCP support
-* [ ] Azure plugin
-* [ ] CLI Tool
-* [ ] Cost Estimation API
-* [ ] SyncVault Integration
+* Unit tests (services, utils)
+* Integration tests (routes via Supertest)
 
 ---
 
-## 💬 Contributing
+## 🧰 Dev Scripts
 
-We welcome PRs, suggestions, and feedback! Please see our [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+| Script                | Description                  |
+| --------------------- | ---------------------------- |
+| `npm run dev`         | Start with hot-reloading     |
+| `npm run build`       | Compile TypeScript           |
+| `npm start`           | Run compiled JS with Nodemon |
+| `npm run test`        | Run Jest test suite          |
+| `npm run lint`        | Lint project with ESLint     |
+| `npm run format`      | Format code with Prettier    |
+| `npm run check-types` | Type check only              |
+
+---
+
+## 📚 API Documentation
+
+Visit `/api-docs` when the server is running to explore the Swagger UI.
+
+> Example: `http://localhost:5000/api-docs`
+
+---
+
+## 🛡 Security Considerations
+
+* 🔐 JWT secret is stored in `.env`
+* 🧂 Passwords hashed with Bcrypt (12+ salt rounds)
+* 🧰 Zod validation for strong payload guarding
+* 🧵 Middleware-level error handling with `express-async-handler`
+
+---
+ 
+
+ 
+## 🤝 Contributing
+
+We're open to contributions! Please fork the repo, make changes in a branch, and open a PR. For more details, check `CONTRIBUTING.md`.
 
 ---
 
 ## 📄 License
 
-MIT © 2025 Nubilo Team
- ```
+MIT © 2025 SyncVault Team
+
+```
 
  
